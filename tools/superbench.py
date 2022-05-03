@@ -5,7 +5,9 @@ HASH_INFO_PATH = '../webadmin/fitcrackAPI/hashcat/hash_info.json'
 def create_and_start_job(session, args, job_name, attack_job_template):
     job_json_data = json.loads(attack_job_template)
     resp = session.post(args.api_url + '/job', json=job_json_data)
-    assert resp.status_code == 200
+    if resp.status_code != 200:
+        print(resp.json())
+        return
     resp = session.get(args.api_url + '/job/' + str(resp.json()['job_id']) + '/action?operation=start')
     assert resp.json()['status'] == True
     if args.debug:
@@ -60,7 +62,7 @@ def main():
     parser.add_argument("--api-url", action="store", default='http://localhost:5000')
     parser.add_argument("--user", action="store", default='fitcrack')
     parser.add_argument("--password", action="store", default='FITCRACK')
-    parser.add_argument("--host-id", action="store", default=1)
+    parser.add_argument("--host-id", action="store", type=int, default=1)
     parser.add_argument("--host-name", action="store")
     parser.add_argument("--delay", action="store", default=60, type=int)
     parser.add_argument("--debug", action="store_true", default=False)
@@ -90,6 +92,7 @@ def main():
         create_job_dict_attack(s, arguments, hashcode, hash_to_crack, host_id)
         time.sleep(arguments.delay)
 
+    return 
     if arguments.debug:
         print("=========== Benchmarking (combinatory attack) ===========")   
     for hashcode in hash_info:
